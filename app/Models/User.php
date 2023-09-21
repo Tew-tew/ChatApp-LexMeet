@@ -4,16 +4,12 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements ShouldBroadcast, ShouldBroadcastNow
+class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -50,28 +46,13 @@ class User extends Authenticatable implements ShouldBroadcast, ShouldBroadcastNo
         'password' => 'hashed',
     ];
 
-    public function broadcastOn()
+    public function conversations()
     {
-        return new PresenceChannel('status-update.' . $this->id);
+        return $this->belongsToMany(Conversations::class, 'participants', 'user_id', 'conversation_id');
     }
 
-    public function toBroadcast()
+    public function messages()
     {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email,
-            // Add any other user data you want to broadcast...
-        ];
-    }
-
-    public function broadcastWith()
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email,
-            // Add any other user data you want to broadcast...
-        ];
+        return $this->hasMany(Message::class);
     }
 }

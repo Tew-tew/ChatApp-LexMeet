@@ -44,7 +44,6 @@ Route::middleware('auth')->group(function () {
     Route::put('/users/{id}/update-status-offline', [UserController::class, 'updateUserStatusToOffline']);
     Route::put('/users/{id}/update-status-online', [UserController::class, 'updateUserStatusToOnline']);
     Route::get('/chat-page', function () {
-        // Define logic for your chat page here
         return Inertia::render('Chat');
     })->name('chat-page');
     Route::get('/chat-page/{id}', [ChatController::class, 'chat']);

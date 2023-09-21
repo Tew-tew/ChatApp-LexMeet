@@ -2,18 +2,17 @@ import Layout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import ChatBoxHead from './Chat/ChatBoxHead';
+import ChatBox from './Chat/ChatBox';
 
 
-const Chat = ({ auth }) => {
-
+const Chat = ({recipientId}) => {
   return (
     <>
         <Head title="Chat Page" />
         <div className="py-8">
                 <Container>
                     <Row >
-                        <ChatBoxHead />
+                        <ChatBox recipientId={recipientId}/>
                     </Row>
                 </Container>
         </div>

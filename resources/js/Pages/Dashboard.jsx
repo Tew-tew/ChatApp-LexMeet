@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/react';
 import UserList from '../Pages/Chat/UserList';
 import { Container, Row, Col } from 'react-bootstrap';
 
-const Dashboard = ({ auth }) => {
+const Dashboard = () => {
     return (
         <>
             <Head title="Dashboard" />

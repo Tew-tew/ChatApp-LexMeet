@@ -158,7 +158,7 @@ export default function Authenticated({ user, header, children }) {
                         <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
                             Dashboard
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
+                        <ResponsiveNavLink href={route('chat-page')} active={route().current('chat-page')}>
                             Chat page
                         </ResponsiveNavLink>
                     </div>

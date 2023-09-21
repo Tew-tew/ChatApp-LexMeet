@@ -11,6 +11,18 @@ class ChatController extends Controller
     public function chat($id) {
 
         $user = User::find($id);
-        Inertia::render('chat-page', ['user' => $user]);
+        return Inertia::render('Chat', ['recipientId' => $id]);
+    }
+
+    public function checkConversation() {
+
+    }
+
+
+    public function sendMessage(Request $request) {
+        $request->validate([
+            'content' => 'required|string',
+            'conversation_id' => 'required|exists:conversations,id',
+        ]);
     }
 }
