@@ -5,7 +5,7 @@ import { Container, Row, Col } from 'react-bootstrap';
 import ChatBox from './Chat/ChatBox';
 
 
-const Chat = ({recipientId}) => {
+const Chat = ({auth, recipientId}) => {
   return (
     <>
         <Head title="Chat Page" />

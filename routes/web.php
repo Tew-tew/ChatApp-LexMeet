@@ -43,10 +43,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/users', [UserController::class, 'showUserLists'])->name('user-list');
     Route::put('/users/{id}/update-status-offline', [UserController::class, 'updateUserStatusToOffline']);
     Route::put('/users/{id}/update-status-online', [UserController::class, 'updateUserStatusToOnline']);
+
+    // chat route
     Route::get('/chat-page', function () {
         return Inertia::render('Chat');
     })->name('chat-page');
     Route::get('/chat-page/{id}', [ChatController::class, 'chat']);
+    Route::post('/send-message', [ChatController::class, 'sendMessage']);
 });
 
 require __DIR__.'/auth.php';

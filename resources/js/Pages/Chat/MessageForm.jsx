@@ -40,7 +40,7 @@ export default function MessageForm({recipientId}) {
             };
 
             axios
-            .post("/sendMessage", messageData)
+            .post("/send-message", messageData)
             .then((response) => {
             console.log("Message sent successfully:", response.data);
                 // You can update the UI to show that the message was sent successfully
