@@ -9,9 +9,13 @@ class Conversation extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'type',
+    ];
+
     public function participants()
     {
-        return $this->hasMany(Participant::class, 'conversation_id');
+        return $this->belongsToMany(User::class, 'participants')->withTimestamps();
     }
 
     public function messages()

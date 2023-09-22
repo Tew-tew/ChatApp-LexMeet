@@ -48,7 +48,7 @@ class User extends Authenticatable
 
     public function conversations()
     {
-        return $this->belongsToMany(Conversation::class, 'participant', 'user_id', 'conversation_id');
+        return $this->belongsToMany(Conversation::class, 'participants')->withTimestamps();
     }
 
     public function messages()
