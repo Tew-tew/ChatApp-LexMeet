@@ -9,7 +9,7 @@ const Chat = ({auth, recipientId}) => {
   return (
     <>
         <Head title="Chat Page" />
-        <div className="py-8">
+        <div className="py-4">
                 <Container>
                     <Row >
                         <ChatBox recipientId={recipientId}/>

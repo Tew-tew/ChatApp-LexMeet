@@ -89,4 +89,36 @@ class ChatController extends Controller
         }
 
     }
+
+    // getting messages
+    public function displayMessages($recipientId)
+    {
+        // Get the current authenticated user
+        $currentUser = Auth::user();
+        try {
+            // Retrieve the conversation that involves both the current user and the recipient
+            $conversation = Conversation::where('type', 'private')
+                ->whereHas('participants', function ($query) use ($currentUser, $recipientId) {
+                    $query->where('user_id', $currentUser->id)
+                        ->orWhere('user_id', $recipientId);
+                })
+                ->with(['messages.user' => function ($query) {
+                    $query->orderBy('created_at', 'asc'); // Optionally, order messages by created_at
+                }])
+                ->first();
+
+            if (!$conversation) {
+            // Handle the case where no conversation is found
+                return abort(404); // You can return a 404 response or handle it as needed
+            }
+
+            // Now you can access the messages in the $conversation variable
+            // $conversation->messages will contain the messages with associated users
+
+            return response()->json(['conversation' => $conversation]);
+        }
+        catch (\Exception $e) {
+            return $e;
+        }
+    }
 }

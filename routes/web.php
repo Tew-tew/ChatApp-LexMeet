@@ -45,11 +45,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/users/{id}/update-status-online', [UserController::class, 'updateUserStatusToOnline']);
 
     // chat route
-    Route::get('/chat-page', function () {
-        return Inertia::render('Chat');
-    })->name('chat-page');
     Route::get('/chat-page/{id}', [ChatController::class, 'chat']);
     Route::post('/send-message', [ChatController::class, 'sendMessage']);
+
+    // displaying messages
+    Route::get('/messages/{id}', [ChatController::class, 'displayMessages']);
 });
 
 require __DIR__.'/auth.php';

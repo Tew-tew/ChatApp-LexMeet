@@ -1,102 +1,48 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 function Conversation({recipientId}) {
+    const [messages, setMessages] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
+    useEffect(() => {
+        // Make a GET request to fetch messages
+        axios.get('/messages/'+recipientId)
+            .then(response => {
+                setMessages(response.data.conversation.messages);
+                setIsLoading(false);
+            })
+            .catch(error => {
+                console.error('Error fetching messages:', error);
+            });
 
+    }, [recipientId]);
   return (
-    <ul className="chat-list" style={{ height: '500px', overflowY: 'auto'}}>
-        {/* classname in and out */}
-        <li className="in">
-            <div className="chat-img">
-                <img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar1.png"/>
-            </div>
-             <div className="chat-body">
-                <div className="chat-message">
-                    <h5>Jimmy Willams</h5>
-                    <p>Raw denim heard of them tofu master cleanse</p>
+    <div>
+        {isLoading ? (
+        <div className='no-chat' style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <p style={{ textAlign: 'center', margin: '0' }}>Currently, there are no conversations.</p>
+        </div>
+        ) : (
+        <ul className="chat-list" style={{ height: '400px', overflowY: 'auto'}}>
+        {messages.map((message, index) => (
+            <li key={message.id} className={message.user.id == recipientId ? 'in' : 'out'}>
+                {index === 0 || message.user.id !== messages[index - 1].user.id ? (
+                <div className="chat-img">
+                    <img alt="Avatar" src={'/images/' + message.user.image} />
                 </div>
-            </div>
-        </li>
-        <li className="out">
-            <div className="chat-img">
-                <img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar6.png"/>
-            </div>
-             <div className="chat-body">
-                <div className="chat-message">
-                    <h5>Serena</h5>
-                    <p>Next level veard</p>
+                ) : null}
+                <div className="chat-body">
+                    <div className="chat-message">
+                        <h5>{message.user.name}</h5>
+                        <p>{message.content}</p>
+                    </div>
                 </div>
-            </div>
-        </li>
-        <li className="in">
-            <div className="chat-img">
-                <img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar1.png"/>
-            </div>
-            <div className="chat-body">
-                <div className="chat-message">
-                    <h5 className="name">Jimmy Willams</h5>
-                    <p>Will stumptown scenes coffee viral.</p>
-                </div>
-            </div>
-        </li>
-        <li className="out">
-            <div className="chat-img">
-                <img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar6.png"/>
-            </div>
-            <div className="chat-body">
-                <div className="chat-message">
-                    <h5>Serena</h5>
-                    <p>Tofu master best deal</p>
-                </div>
-            </div>
-        </li>
-        {/*  */}
-        <li className="in">
-            <div className="chat-img">
-                <img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar1.png"/>
-            </div>
-            <div className="chat-body">
-                <div className="chat-message">
-                    <h5>Jimmy Willams</h5>
-                    <p>Raw denim heard of them tofu master cleanse</p>
-                 </div>
-            </div>
-        </li>
-        <li className="out">
-            <div className="chat-img">
-                <img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar6.png"/>
-            </div>
-            <div className="chat-body">
-                <div className="chat-message">
-                    <h5>Serena</h5>
-                    <p>Next level veard</p>
-                </div>
-            </div>
-        </li>
-        <li className="in">
-            <div className="chat-img">
-                <img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar1.png"/>
-            </div>
-            <div className="chat-body">
-                 <div className="chat-message">
-                    <h5 className="name">Jimmy Willams</h5>
-                    <p>Will stumptown scenes coffee viral.</p>
-                </div>
-            </div>
-        </li>
-        <li className="out">
-            <div className="chat-img">
-                <img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar6.png"/>
-            </div>
-            <div className="chat-body">
-                <div className="chat-message">
-                    <h5>Serena</h5>
-                    <p>Tofu master best deal</p>
-                </div>
-            </div>
-        </li>
-    </ul>
+            </li>
+        ))}
+        </ul>
+        )}
+    </div>
   )
 }
 

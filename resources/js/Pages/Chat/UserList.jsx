@@ -85,7 +85,7 @@ const UserList = () => {
                                 }}
                             >
                                 <img
-                                src={'images/' + user.image} // Replace with your image URL
+                                src={'/images/' + user.image} // Replace with your image URL
                                 alt="Profile"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
