@@ -20,7 +20,6 @@ const UserList = () => {
 
             echo.join("online-status")
             .here((usersOnline) => {
-                console.log(usersOnline);
                 // Handle users online status
                 setUsers((prevUsers) => {
                     return prevUsers.map((u) => {
@@ -30,13 +29,10 @@ const UserList = () => {
                 });
             })
             .joining((user) => {
-                console.log(`${user.name} joined the presence channel`);
                 axios.put(`/users/${user.id}/update-status-online`)
                             .then(response => {
-                                console.log('User status updated successfully:', response.data);
                             })
                             .catch(error => {
-                                console.error('Error updating user status:', error);
                             });
                 setUsers((prevUsers) => {
                     return prevUsers.map((u) => {
@@ -48,13 +44,10 @@ const UserList = () => {
                 });
             })
             .leaving((user) => {
-                console.log(`${user.name} left the presence channel`);
                 axios.put(`/users/${user.id}/update-status-offline`)
                     .then(response => {
-                        console.log('User status updated successfully:', response.data);
                     })
                     .catch(error => {
-                        console.error('Error updating user status:', error);
                     });
                 setUsers((prevUsers) => {
                     return prevUsers.map((u) => {

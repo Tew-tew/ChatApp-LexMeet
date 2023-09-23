@@ -15,55 +15,23 @@ export default function Authenticated({ user, header, children }) {
         const presenceChannel = echo.join('online-status');
 
         presenceChannel.here((users) => {
-            console.log('Users currently online:', users);
-
             const loggedInUserId = user.id;
-
             const isUserOnline = users.some(user => user.id === loggedInUserId);
-
             if (isUserOnline) {
                 // The logged-in user is online, update their status
-                axios.put(`/users/${loggedInUserId}/update-status-online`)
-                    .then(response => {
-                        console.log('User status updated successfully:', response.data);
-                    })
-                    .catch(error => {
-                        console.error('Error updating user status:', error);
-                    });
-            } else {
-                console.log('The logged-in user is not in the presence channel.');
+                axios.put(`/users/${loggedInUserId}/update-status-online`);
             }
         })
         .joining((user) => {
-            console.log(`${user.name} joined the presence channel`);
-            axios.put(`/users/${user.id}/update-status-online`)
-                .then(response => {
-                    console.log('User status updated successfully:', response.data);
-                })
-                .catch(error => {
-                    console.error('Error updating user status:', error);
-                });
+            axios.put(`/users/${user.id}/update-status-online`);
         })
         .leaving((user) => {
-            console.log(`${user.name} left the presence channel`);
-            axios.put(`/users/${user.id}/update-status-offline`)
-                .then(response => {
-                    console.log('User status updated successfully:', response.data);
-                })
-                .catch(error => {
-                    console.error('Error updating user status:', error);
-                });
+            axios.put(`/users/${user.id}/update-status-offline`);
         });
 
         return () => {
             echo.leave("online-status", () => {
-                axios.put(`/users/${user.id}/update-status-offline`)
-                .then(response => {
-                    console.log('User status updated successfully:', response.data);
-                })
-                .catch(error => {
-                    console.error('Error updating user status:', error);
-                });
+                axios.put(`/users/${user.id}/update-status-offline`);
             });
         };
     }, []);

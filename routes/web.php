@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/send-message', [ChatController::class, 'sendMessage']);
 
     // displaying messages
+    Route::get('/get-conversation-id/{recipientId}', [ChatController::class, 'getConversationId']);
     Route::get('/messages/{id}', [ChatController::class, 'displayMessages']);
 });
 

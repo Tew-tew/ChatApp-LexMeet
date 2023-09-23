@@ -5,7 +5,7 @@ import Conversation from "./Conversation";
 import MessageForm from "./MessageForm";
 import { useState } from "react";
 
-const ChatBox = ({recipientId}) => {
+const ChatBox = ({auth, recipientId}) => {
     const [messages, setMessages] = useState([]);
 
     // Callback function to add a new message to the messages state
@@ -20,7 +20,7 @@ const ChatBox = ({recipientId}) => {
                 <div className="card">
                     <div className="card-header">Chat</div>
                     <div className="card-body height3">
-                        <Conversation recipientId={recipientId} messages={messages}/>
+                        <Conversation auth={auth} recipientId={recipientId} messages={messages}/>
                         <MessageForm recipientId={recipientId} addMessage={addMessage}/>
                     </div>
                 </div>

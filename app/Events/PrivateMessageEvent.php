@@ -15,17 +15,13 @@ class PrivateMessageEvent implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
 
-    public $message;
-    public $senderId;
-    public $recipientId;
+    private $message;
     /**
      * Create a new event instance.
      */
-    public function __construct($message, $senderId, $recipientId)
+    public function __construct($message)
     {
         $this->message = $message;
-        $this->senderId = $senderId;
-        $this->recipientId = $recipientId;
     }
 
     /**
@@ -36,13 +32,22 @@ class PrivateMessageEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('private-chat.' . $this->recipientId),
+            new PrivateChannel('private-chat.'.$this->message->conversation_id),
         ];
     }
 
+    public function broadcastWith()
+    {
+        return [
+            'message' => $this->message->load('user'),
+        ];
+    }
     public function broadcastAs()
     {
         return 'PrivateMessageEvent';
     }
+
+
+
 
 }

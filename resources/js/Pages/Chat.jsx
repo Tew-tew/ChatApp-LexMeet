@@ -12,7 +12,7 @@ const Chat = ({auth, recipientId}) => {
         <div className="py-4">
                 <Container>
                     <Row >
-                        <ChatBox recipientId={recipientId}/>
+                        <ChatBox auth={auth} recipientId={recipientId}/>
                     </Row>
                 </Container>
         </div>

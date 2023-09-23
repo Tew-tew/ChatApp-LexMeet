@@ -32,7 +32,7 @@ export default function MessageForm({recipientId, addMessage}) {
         const messageType = isImage ? 'image' : 'text';
 
         // Call the onSendMessage callback with the message text and recipient ID
-        const sendMessage = (content, recipientId) => {
+        const sendMessage = (content, recipientId, messageType) => {
             const messageData = {
                 text: content,
                 recipientId: recipientId,
@@ -43,8 +43,9 @@ export default function MessageForm({recipientId, addMessage}) {
             .post("/send-message", messageData)
             .then((response) => {
                 console.log("Message sent successfully:", response.data);
-                // You can update the UI to show that the message was sent successfully
                 addMessage({ content,  messageData});
+
+                setContent('');
             })
             .catch((error) => {
             console.error("Error sending message:", error);
@@ -53,7 +54,6 @@ export default function MessageForm({recipientId, addMessage}) {
         };
 
         // Clear the message input field
-        setContent('');
 
         // Determine content type and send the message
         if (isImage) {

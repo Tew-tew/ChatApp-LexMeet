@@ -29,26 +29,27 @@ class ChatController extends Controller
 
         try {
             $user = Auth::user();
+            $recipientId = $request->recipientId; // Add this line
 
             // Check if a conversation exists between the sender and recipient
-            $conversation = Conversation::whereHas('participants', function ($query) use ($user, $request) {
-                $query->where('user_id', $user->id)
-                    ->orWhere('user_id', $request->recipientId);
+            $conversation = Conversation::whereHas('participants', function ($query) use ($user, $recipientId) {
+                $query->where('user_id', $user->id);
+            })->whereHas('participants', function ($query) use ($recipientId) {
+                $query->where('user_id', $recipientId);
             })
-            ->where('type', 'private') // Assuming this is a private conversation
+            ->where('type', 'private')
             ->first();
 
             // If a conversation doesn't exist, create a new one
             if (!$conversation) {
                 $conversation = new Conversation([
-                    'type' => 'private', // Assuming this is a private conversation
+                    'type' => 'private',
                 ]);
                 $conversation->save();
 
                 // Attach participants (sender and recipient) to the conversation
-                $conversation->participants()->sync([$user->id, $request->recipientId]);
+                $conversation->participants()->sync([$user->id, $recipientId]);
             }
-
 
             if ($request->messageType === 'image' && $request->has('imageData')) {
                 // Handle base64-encoded image data
@@ -63,7 +64,7 @@ class ChatController extends Controller
                 File::put($path, $imageData);
 
                 $message = new Message([
-                    'content' => $filename, // Save the filename or path in the 'content' column
+                    'content' => $filename,
                     'conversation_id' => $conversation->id,
                     'user_id' => $user->id,
                     'message_type' => 'image',
@@ -82,47 +83,57 @@ class ChatController extends Controller
                     'user_id' => $user->id,
                 ]);
             }
-
+            $lastMessage = Message::where('user_id', $user->id)
+            ->where('conversation_id', $conversation->id)
+            ->latest()
+            ->first();
             // Dispatch the message event
-            event(new PrivateMessageEvent($message, $user->id, $request->recipientId));
+            if ($lastMessage) {
+                broadcast(new PrivateMessageEvent($lastMessage))->toOthers();
+            }
 
             return response()->json(['message' => 'Message sent successfully.']);
 
         } catch (\Exception $e) {
             return $e;
         }
+    }
+    // getting conversationId
+    public function getConversationId($recipientId) {
+        try {
+            $currentUser = Auth::user();
+            $conversation = Conversation::whereHas('participants', function ($query) use ($currentUser) {
+                $query->where('user_id', $currentUser->id);
+            })->whereHas('participants', function ($query) use ($recipientId) {
+                $query->where('user_id', $recipientId);
+            })->first();
 
+            if ($conversation) {
+                return response()->json(['conversationId' => $conversation->id]);
+            } else {
+                // Handle the case when no conversation exists
+                return response()->json(['error' => 'No conversation found for the recipient'], 404);
+            }
+        } catch (\Exception $e) {
+
+            return response()->json(['error' => 'No conversation found for the recipient'], 404);
+        }
     }
 
     // getting messages
-    public function displayMessages($recipientId)
+    public function displayMessages($conversationId)
     {
-        // Get the current authenticated user
-        $currentUser = Auth::user();
+        // Retrieve the conversation by its ID
         try {
-            // Retrieve the conversation that involves both the current user and the recipient
-            $conversation = Conversation::where('type', 'private')
-                ->whereHas('participants', function ($query) use ($currentUser, $recipientId) {
-                    $query->where('user_id', $currentUser->id)
-                        ->orWhere('user_id', $recipientId);
-                })
-                ->with(['messages.user' => function ($query) {
-                    $query->orderBy('created_at', 'asc'); // Optionally, order messages by created_at
-                }])
-                ->first();
+            // Retrieve messages for the given conversation ID
+            $messages = Message::where('conversation_id', $conversationId)->with('user')->get();
 
-            if (!$conversation) {
-            // Handle the case where no conversation is found
-                return abort(404); // You can return a 404 response or handle it as needed
-            }
-
-            // Now you can access the messages in the $conversation variable
-            // $conversation->messages will contain the messages with associated users
-
-            return response()->json(['conversation' => $conversation]);
-        }
-        catch (\Exception $e) {
+            // Return the messages as JSON
+            return response()->json(['messages' => $messages]);
+        } catch (\Exception $e) {
+            // Log and handle any errors
             return $e;
+            // return response()->json(['error' => 'Error fetching messages'], 500);
         }
     }
 }

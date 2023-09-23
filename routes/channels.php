@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
@@ -24,9 +25,24 @@ Broadcast::channel('online-status', function ($user) {
     return $user;
 });
 
-Broadcast::channel('private-chat.{recipientId}', function ($user, $recipientId) {
-    // Authorization logic to check if the user can listen to the channel
-    return (int) $user->id === (int) $recipientId;
+Broadcast::channel('private-chat.{conversationId}', function (User $user, $conversationId)
+{
+    if (!$user) {
+        return false; // User is not authenticated, so not authorized.
+    }
+    // Check if the user is authorized to join the conversation.
+    $conversation = Conversation::find($conversationId);
+
+    if (!$conversation) {
+        return false; // Conversation does not exist, user is not authorized.
+    }
+
+    // Check if the user is one of the participants in the conversation.
+    if ($conversation->participants->contains($user->id)) {
+        return true; // User is authorized to join the conversation.
+    }
+
+    return false;
 });
 
 
