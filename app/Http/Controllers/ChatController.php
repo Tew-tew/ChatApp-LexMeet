@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PrivateMessageEvent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
@@ -81,6 +82,9 @@ class ChatController extends Controller
                     'user_id' => $user->id,
                 ]);
             }
+
+            // Dispatch the message event
+            event(new PrivateMessageEvent($message, $user->id, $request->recipientId));
 
             return response()->json(['message' => 'Message sent successfully.']);
 

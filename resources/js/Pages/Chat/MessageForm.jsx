@@ -2,7 +2,7 @@ import { FaPaperclip } from 'react-icons/fa';
 import React, { useRef, useState } from 'react';
 import axios from 'axios';
 
-export default function MessageForm({recipientId}) {
+export default function MessageForm({recipientId, addMessage}) {
     const [content, setContent] = useState('');
     const fileInputRef = useRef(null);
 
@@ -42,8 +42,9 @@ export default function MessageForm({recipientId}) {
             axios
             .post("/send-message", messageData)
             .then((response) => {
-            console.log("Message sent successfully:", response.data);
+                console.log("Message sent successfully:", response.data);
                 // You can update the UI to show that the message was sent successfully
+                addMessage({ content,  messageData});
             })
             .catch((error) => {
             console.error("Error sending message:", error);
