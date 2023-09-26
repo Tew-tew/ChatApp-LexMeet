@@ -3,9 +3,13 @@ import React, { useEffect, useState } from 'react';
 import axios from "axios";
 import echo from "@/Components/EchoComponent/Echo";
 import { Link } from "@inertiajs/react";
-
-const UserList = () => {
+import useOnlineStatusChannel from "@/Hooks/useOnlineStatusChannel";
+const UserList = ({user}) => {
     const [users, setUsers] = useState([]);
+    const [userStatuses, setUserStatuses] = useState({});
+    const channel = echo.channel("online-status");
+
+    useOnlineStatusChannel(user);
 
     useEffect(() => {
         // Fetch the initial user data
@@ -18,49 +22,18 @@ const UserList = () => {
             });
 
 
-            echo.join("online-status")
-            .here((usersOnline) => {
-                // Handle users online status
-                setUsers((prevUsers) => {
-                    return prevUsers.map((u) => {
-                        const isOnline = usersOnline.some((onlineUser) => onlineUser.id === u.id);
-                        return { ...u, isOnline: isOnline };
-                    });
-                });
-            })
-            .joining((user) => {
-                axios.put(`/users/${user.id}/update-status-online`)
-                            .then(response => {
-                            })
-                            .catch(error => {
-                            });
-                setUsers((prevUsers) => {
-                    return prevUsers.map((u) => {
-                        if (u.id === user.id) {
-                            return { ...u, isOnline: true };
-                        }
-                        return u;
-                    });
-                });
-            })
-            .leaving((user) => {
-                axios.put(`/users/${user.id}/update-status-offline`)
-                    .then(response => {
-                    })
-                    .catch(error => {
-                    });
-                setUsers((prevUsers) => {
-                    return prevUsers.map((u) => {
-                        if (u.id === user.id) {
-                            return { ...u, isOnline: false };
-                        }
-                        return u;
-                    });
-                });
-            });
+
+            channel.listen('UserStatusEvent', (event) => {
+                console.log(event);
+                setUserStatuses((prevStatuses) => ({
+                    ...prevStatuses,
+                    [event.user.id]: event.isOnline === 1,
+                }));
+              });
 
         // Clean up when the component unmounts
-    }, []);
+
+    }, [users]);
 
     return (
         <div className="mb-3">

@@ -19,8 +19,6 @@ use Inertia\Inertia;
 |
 */
 
-Route::get('test' , [TestEventController::class, 'testingEvent']);
-
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -45,8 +43,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/users/{id}/update-status-online', [UserController::class, 'updateUserStatusToOnline']);
 
     // chat route
+    Route::get('/group-chat', function () {
+        return Inertia::render('GroupChat');
+    })->name('group-chat');
+
     Route::get('/chat-page/{id}', [ChatController::class, 'chat']);
     Route::post('/send-message', [ChatController::class, 'sendMessage']);
+
 
     // displaying messages
     Route::get('/get-conversation-id/{recipientId}', [ChatController::class, 'getConversationId']);

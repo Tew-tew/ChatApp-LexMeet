@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Conversation;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+
+use function Laravel\Prompts\error;
 
 class RegisteredUserController extends Controller
 {
@@ -50,10 +53,34 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($user));
+        $this->createGroupParticipant($user);
 
         Auth::login($user);
 
         return redirect(RouteServiceProvider::HOME);
+    }
+
+    private function createGroupParticipant($user) {
+        // Check if Conversation 1 exists
+        try {
+
+            $conversationId = 1;
+            $conversation = Conversation::find($conversationId);
+
+            if (!$conversation) {
+                // Conversation 1 doesn't exist, create it as a group conversation
+                $conversation = Conversation::create([
+                    'type' => 'group',
+                ]);
+            }
+
+             // Attach the newly registered user to Conversation 1 in the conversations table
+            $user->conversations()->syncWithoutDetaching([$conversation->id]);
+
+            // Attach the newly registered user to Conversation 1 in the participants table
+            $user->participants()->syncWithoutDetaching([$conversation->id]);
+        } catch (\Exception $e) {
+            return $e;
+        }
     }
 }

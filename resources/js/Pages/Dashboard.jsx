@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/react';
 import UserList from '../Pages/Chat/UserList';
 import { Container, Row, Col } from 'react-bootstrap';
 
-const Dashboard = () => {
+const Dashboard = ({auth}) => {
     return (
         <>
             <Head title="Dashboard" />
@@ -11,7 +11,7 @@ const Dashboard = () => {
                 <Container>
                     <Row >
                         <Col className="mx-auto" style={{ maxHeight: '600px', maxWidth: '60%', overflowY: 'auto' }}>
-                            <UserList  />
+                            <UserList user={auth} />
                         </Col>
                     </Row>
                 </Container>

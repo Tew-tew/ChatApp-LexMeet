@@ -9,13 +9,14 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class PrivateMessageEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
 
-    private $message;
+    public $message;
     /**
      * Create a new event instance.
      */
@@ -31,6 +32,7 @@ class PrivateMessageEvent implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
+        Log::info('Broadcasting message to private channel: private-chat.' . $this->message->conversation_id);
         return [
             new PrivateChannel('private-chat.'.$this->message->conversation_id),
         ];
@@ -42,10 +44,10 @@ class PrivateMessageEvent implements ShouldBroadcast
             'message' => $this->message->load('user'),
         ];
     }
-    public function broadcastAs()
-    {
-        return 'PrivateMessageEvent';
-    }
+    // public function broadcastAs()
+    // {
+    //     return 'PrivateMessageEvent';
+    // }
 
 
 

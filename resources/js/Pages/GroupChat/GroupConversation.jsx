@@ -2,24 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import echo from '../../Components/EchoComponent/Echo';
 
-function Conversation({auth, recipientId }) {
+function GroupConversation({auth}) {
     const [chatMessages, setChatMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const chatListRef = useRef(null);
-    const [receivedConversationId, setReceivedConversationId] = useState(null);
-
+    const conversationId = 1; //group chat id
     useEffect(() => {
-        // getting conversationId
-        axios.get(`/get-conversation-id/${recipientId}`)
-        .then(response => {
-            console.log(response.data.conversationId);
-            const receivedConversationId = response.data.conversationId;
-            setReceivedConversationId(response.data.conversationId);
 
-            if (receivedConversationId) {
-                const chatChannel = `private-chat.${receivedConversationId}`;
-                echo.private(chatChannel)
-                    .listen('PrivateMessageEvent', (message) => {
+                const chatChannel = `group-chat`;
+                echo.join(chatChannel)
+                    .listen('GroupMessageEvent', (message) => {
                         console.log('Listening to channel:', chatChannel); // Log the channel you're listening to
                         console.log('Received message:', message);
                         // Add the received message to the state
@@ -28,7 +20,7 @@ function Conversation({auth, recipientId }) {
                         scrollToBottom(); // Scroll to the latest message
                     });
                     // Make a GET request to fetch messages
-                    axios.get(`/messages/${receivedConversationId}`)
+                    axios.get(`/messages/${conversationId}`)
                     .then(response => {
                         setChatMessages(response.data.messages);
                         setIsLoading(false);
@@ -36,20 +28,12 @@ function Conversation({auth, recipientId }) {
                     .catch(error => {
                         console.error('Error fetching messages:', error);
                     });
-            } else {
-                setIsLoading(false);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching conversationId:', error);
-            setIsLoading(false);
-        });
         return () => {
             // Clean up the Echo instance when the component unmounts
             echo.disconnect();
           };
 
-    }, [recipientId]);
+    }, []);
 
     // Function to scroll to the bottom of the chat list
     const scrollToBottom = () => {
@@ -76,7 +60,7 @@ function Conversation({auth, recipientId }) {
         ) : (
         <ul ref={chatListRef} className="chat-list" style={{ height: '400px', overflowY: 'auto'}}>
         {chatMessages.map((message, index) => (
-            <li key={message.id} className={message.user.id == recipientId ? 'in' : 'out'}>
+            <li key={message.id} className={message.user.id == auth.user.id ? 'out' : 'in'}>
                 {index === 0 || message.user.id !== chatMessages[index - 1].user.id ? (
                 <div className="chat-img">
                     <img alt="Avatar" src={'/images/' + message.user.image} />
@@ -97,4 +81,4 @@ function Conversation({auth, recipientId }) {
 }
 
 
-export default Conversation
+export default GroupConversation

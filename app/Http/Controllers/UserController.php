@@ -29,7 +29,7 @@ class UserController extends Controller
 
         $user->isOnline = true; // Set it to false
         $user->save();
-
+        event(new UserStatusEvent($user));
         return response()->json(['message' => 'User status updated successfully', 'user' => $user]);
     }
 
@@ -43,7 +43,7 @@ class UserController extends Controller
 
         $user->isOnline = false; // Set it to false
         $user->save();
-
+        event(new UserStatusEvent($user));
         return response()->json(['message' => 'User status updated successfully', 'user' => $user]);
     }
 }

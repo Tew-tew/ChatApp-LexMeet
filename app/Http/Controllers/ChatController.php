@@ -20,6 +20,10 @@ class ChatController extends Controller
         return Inertia::render('Chat', ['recipientId' => $id]);
     }
 
+    // public function groupChat() {
+    //     return Inertia::render('GroupChat');
+    // }
+
     public function sendMessage(Request $request) {
         $request->validate([
             'text' => 'required|string',
@@ -83,13 +87,12 @@ class ChatController extends Controller
                     'user_id' => $user->id,
                 ]);
             }
-            $lastMessage = Message::where('user_id', $user->id)
-            ->where('conversation_id', $conversation->id)
-            ->latest()
+
+            $lastMessage = $messages = Message::where('conversation_id', $conversation->id)->with('user')->latest()
             ->first();
             // Dispatch the message event
             if ($lastMessage) {
-                broadcast(new PrivateMessageEvent($lastMessage))->toOthers();
+                event(new PrivateMessageEvent($lastMessage));
             }
 
             return response()->json(['message' => 'Message sent successfully.']);
@@ -112,11 +115,11 @@ class ChatController extends Controller
                 return response()->json(['conversationId' => $conversation->id]);
             } else {
                 // Handle the case when no conversation exists
-                return response()->json(['error' => 'No conversation found for the recipient'], 404);
+                return response()->json(['error' => 'No conversation found for the recipient']);
             }
         } catch (\Exception $e) {
 
-            return response()->json(['error' => 'No conversation found for the recipient'], 404);
+            return response()->json(['error' => 'No conversation found for the recipient']);
         }
     }
 

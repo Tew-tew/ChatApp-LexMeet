@@ -45,4 +45,11 @@ Broadcast::channel('private-chat.{conversationId}', function (User $user, $conve
     return false;
 });
 
+Broadcast::channel('group-chat', function (User $user)
+{
+    if (!$user) {
+        return false; // User is not authenticated, so not authorized.
+    }
 
+    return true;
+});

@@ -5,36 +5,12 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
 import { useEffect } from 'react';
-import echo from '@/Components/EchoComponent/Echo';
+import OnlineStatusChannel from '@/Hooks/useOnlineStatusChannel';
 
 export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
-    useEffect(() => {
-
-        const presenceChannel = echo.join('online-status');
-
-        presenceChannel.here((users) => {
-            const loggedInUserId = user.id;
-            const isUserOnline = users.some(user => user.id === loggedInUserId);
-            if (isUserOnline) {
-                // The logged-in user is online, update their status
-                axios.put(`/users/${loggedInUserId}/update-status-online`);
-            }
-        })
-        .joining((user) => {
-            axios.put(`/users/${user.id}/update-status-online`);
-        })
-        .leaving((user) => {
-            axios.put(`/users/${user.id}/update-status-offline`);
-        });
-
-        return () => {
-            echo.leave("online-status", () => {
-                axios.put(`/users/${user.id}/update-status-offline`);
-            });
-        };
-    }, []);
+    OnlineStatusChannel(user);
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -51,6 +27,9 @@ export default function Authenticated({ user, header, children }) {
                             <div className="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                                 <NavLink href={route('dashboard')} active={route().current('dashboard')}>
                                     Dashboard
+                                </NavLink>
+                                <NavLink href={route('group-chat')} active={route().current('group-chat')}>
+                                    Group Chat
                                 </NavLink>
                             </div>
                         </div>

@@ -50,7 +50,8 @@ class LoginRequest extends FormRequest
                 'email' => trans('auth.failed'),
             ]);
         }
-
+        $user = Auth::user();
+        event(new UserStatusEvent($user));
         RateLimiter::clear($this->throttleKey());
     }
 

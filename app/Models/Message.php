@@ -27,8 +27,4 @@ class Message extends Model
         return $this->belongsTo(Conversation::class);
     }
 
-    public function broadcastOn()
-    {
-        return new PrivateChannel('private-chat.' . $this->conversation_id);
-    }
 }
