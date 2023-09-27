@@ -2,7 +2,7 @@ import { FaPaperclip } from 'react-icons/fa';
 import React, { useRef, useState } from 'react';
 import axios from 'axios';
 
-export default function GroupMessageForm({recipientId, addMessage}) {
+export default function GroupMessageForm({ addMessage, conversationId }) {
     const [content, setContent] = useState('');
     const fileInputRef = useRef(null);
 
@@ -14,8 +14,8 @@ export default function GroupMessageForm({recipientId, addMessage}) {
         // Handle the selected file here
         const selectedFile = e.target.files[0];
         if (selectedFile) {
-            const selectedFileName = selectedFile.toString(); // Convert to string
-            console.log('Selected File:', selectedFileName);
+            // You can perform additional actions here if needed
+            console.log('Selected File:', selectedFile.name);
         }
     };
 
@@ -31,38 +31,31 @@ export default function GroupMessageForm({recipientId, addMessage}) {
         // Define the content type based on the 'isImage' flag
         const messageType = isImage ? 'image' : 'text';
 
-        // Call the onSendMessage callback with the message text and recipient ID
-        const sendMessage = (content, recipientId, messageType) => {
-            const messageData = {
-                text: content,
-                recipientId: recipientId,
-                messageType: messageType,
-            };
+        // Create a FormData object for sending data (text or image)
+        const formData = new FormData();
+        formData.append('messageType', messageType);
+        formData.append('text', content);
+        formData.append('conversationId', conversationId);
+        if (isImage) {
+            formData.append('imageData', fileInputRef.current.files[0]);
+        }
 
-            axios
-            .post("/send-message", messageData)
+        // Send the message
+        axios
+            .post("/send-message", formData)
             .then((response) => {
                 console.log("Message sent successfully:", response.data);
-                addMessage({ content,  messageData});
+                // You can add the new message to the chat here
+                addMessage(response.data);
 
+                // Clear the input fields
                 setContent('');
+                fileInputRef.current.value = null;
             })
             .catch((error) => {
-            console.error("Error sending message:", error);
+                console.error("Error sending message:", error);
                 // Handle the error and show an error message to the user
             });
-        };
-
-        // Clear the message input field
-
-        // Determine content type and send the message
-        if (isImage) {
-            // Handle sending images here
-            sendMessage(content, recipientId, messageType);
-        } else {
-            // Handle sending text here
-            sendMessage(content, recipientId, messageType);
-        }
     };
 
     // Function to check if content is an image based on specific criteria
@@ -71,35 +64,35 @@ export default function GroupMessageForm({recipientId, addMessage}) {
         return content.startsWith('data:image/') || content.includes('image:');
     };
 
-  return (
-    <div className="chat-input-container">
-        <input
-            type="text"
-            className="form-control"
-            placeholder="Type your message..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                    handleSendMessage();
-                 }
-            }}
-        />
-        <FaPaperclip
-            className="attachment-icon"
-            onClick={handleAttachmentClick} // Handle click on the icon
-        />
-        <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="form-control-file"
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-        />
-        <button className="btn btn-primary" onClick={handleSendMessage}>
-            Send
-        </button>
-    </div>
-  )
-};
+    return (
+        <div className="chat-input-container">
+            <input
+                type="text"
+                className="form-control"
+                placeholder="Type your message..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        handleSendMessage();
+                    }
+                }}
+            />
+            <FaPaperclip
+                className="attachment-icon"
+                onClick={handleAttachmentClick} // Handle click on the icon
+            />
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="form-control-file"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+            />
+            <button className="btn btn-primary" onClick={handleSendMessage}>
+                Send
+            </button>
+        </div>
+    );
+}

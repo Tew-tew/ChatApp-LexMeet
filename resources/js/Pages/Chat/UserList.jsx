@@ -9,10 +9,8 @@ const UserList = ({user}) => {
     const [userStatuses, setUserStatuses] = useState({});
     const channel = echo.channel("online-status");
 
-    useOnlineStatusChannel(user);
 
     useEffect(() => {
-        // Fetch the initial user data
         axios.get('/users')
             .then((response) =>  {
                 setUsers(response.data);
@@ -22,18 +20,43 @@ const UserList = ({user}) => {
             });
 
 
+            echo.join("online-status")
+            .here((usersOnline) => {
+                console.log(usersOnline);
+                // Handle users online status
+                setUsers((prevUsers) => {
+                    return prevUsers.map((u) => {
+                        const isOnline = usersOnline.some((onlineUser) => onlineUser.id === u.id);
+                        return { ...u, isOnline: isOnline };
+                    });
+                });
+            })
+            .joining((user) => {
+                console.log(`${user.name} joined the presence channel`);
+                axios.put(`/users/${user.id}/update-status-online`);
+                setUsers((prevUsers) => {
+                    return prevUsers.map((u) => {
+                        if (u.id === user.id) {
+                            return { ...u, isOnline: true };
+                        }
+                        return u;
+                    });
+                });
+            })
+            .leaving((user) => {
+                console.log(`${user.name} left the presence channel`);
+                axios.put(`/users/${user.id}/update-status-offline`);
+                setUsers((prevUsers) => {
+                    return prevUsers.map((u) => {
+                        if (u.id === user.id) {
+                            return { ...u, isOnline: false };
+                        }
+                        return u;
+                    });
+                });
+            });
 
-            channel.listen('UserStatusEvent', (event) => {
-                console.log(event);
-                setUserStatuses((prevStatuses) => ({
-                    ...prevStatuses,
-                    [event.user.id]: event.isOnline === 1,
-                }));
-              });
-
-        // Clean up when the component unmounts
-
-    }, [users]);
+    }, []);
 
     return (
         <div className="mb-3">

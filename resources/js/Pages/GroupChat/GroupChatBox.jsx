@@ -5,9 +5,9 @@ import GroupConversation from "./GroupConversation";
 import GroupMessageForm from "./GroupMessageForm";
 import { useState } from "react";
 
-const GroupChatBox = ({auth}) => {
+const GroupChatBox = ({auth, conversationId}) => {
     const [messages, setMessages] = useState([]);
-
+    conversationId = 1; //group chat id
     // Callback function to add a new message to the messages state
     const addMessage = (newMessage) => {
         setMessages([...messages, newMessage]);
@@ -20,8 +20,8 @@ const GroupChatBox = ({auth}) => {
                 <div className="card">
                     <div className="card-header">Chat</div>
                     <div className="card-body height3">
-                        <GroupConversation auth={auth} messages={messages}/>
-                        <GroupMessageForm addMessage={addMessage}/>
+                        <GroupConversation auth={auth} messages={messages} conversationId={conversationId}/>
+                        <GroupMessageForm addMessage={addMessage} conversationId={conversationId}/>
                     </div>
                 </div>
             </div>

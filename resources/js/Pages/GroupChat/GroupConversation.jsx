@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import echo from '../../Components/EchoComponent/Echo';
 
-function GroupConversation({auth}) {
+function GroupConversation({auth, conversationId}) {
     const [chatMessages, setChatMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const chatListRef = useRef(null);
-    const conversationId = 1; //group chat id
     useEffect(() => {
 
                 const chatChannel = `group-chat`;

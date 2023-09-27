@@ -11,6 +11,4 @@ const echo = new Echo({
             enabledTransports: ['ws', 'wss'],
 });
 
-echo.connect();
-
 export default echo;

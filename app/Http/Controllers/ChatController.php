@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\GroupMessageEvent;
 use App\Events\PrivateMessageEvent;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -20,82 +21,33 @@ class ChatController extends Controller
         return Inertia::render('Chat', ['recipientId' => $id]);
     }
 
-    // public function groupChat() {
-    //     return Inertia::render('GroupChat');
-    // }
-
     public function sendMessage(Request $request) {
         $request->validate([
             'text' => 'required|string',
-            'recipientId' => 'required|exists:users,id',
+            'recipientId' => 'sometimes|exists:users,id', // Allow recipientId to be optional
+            'conversationId' => 'sometimes|exists:conversations,id', // Allow conversationId to be optional
             'messageType' => 'required|in:text,image',
         ]);
 
         try {
             $user = Auth::user();
             $recipientId = $request->recipientId; // Add this line
+            $conversationId = $request->conversationId;
 
-            // Check if a conversation exists between the sender and recipient
-            $conversation = Conversation::whereHas('participants', function ($query) use ($user, $recipientId) {
-                $query->where('user_id', $user->id);
-            })->whereHas('participants', function ($query) use ($recipientId) {
-                $query->where('user_id', $recipientId);
-            })
-            ->where('type', 'private')
-            ->first();
+            // Determine whether it's a one-on-one or group message
+            if ($recipientId) {
+                // One-on-one message logic
+                $conversation = $this->getOrCreatePrivateConversation($user, $recipientId);
+                $message = $this->saveMessage($request, $conversation, $user);
+                event(new PrivateMessageEvent($message));
 
-            // If a conversation doesn't exist, create a new one
-            if (!$conversation) {
-                $conversation = new Conversation([
-                    'type' => 'private',
-                ]);
-                $conversation->save();
-
-                // Attach participants (sender and recipient) to the conversation
-                $conversation->participants()->sync([$user->id, $recipientId]);
+            } elseif ($conversationId) {
+                $conversation = $this->getGroupConversation($conversationId);
+                $message = $this->saveMessage($request, $conversation, $user);
+                event(new GroupMessageEvent($message));
+            } else {
+                return response()->json(['error' => 'Invalid request.'], 400);
             }
-
-            if ($request->messageType === 'image' && $request->has('imageData')) {
-                // Handle base64-encoded image data
-                $imageData = $request->input('imageData');
-                $imageData = base64_decode($imageData);
-
-                // Generate a unique filename for the image
-                $filename = Str::random(20) . '.jpg';
-
-                // Save the image to a storage path (you may configure your storage in Laravel)
-                $path = storage_path('app/public/chat-images/' . $filename);
-                File::put($path, $imageData);
-
-                $message = new Message([
-                    'content' => $filename,
-                    'conversation_id' => $conversation->id,
-                    'user_id' => $user->id,
-                    'message_type' => 'image',
-                ]);
-
-                $message->save();
-
-            } elseif ($request->messageType === 'text' && $request->has('text')) {
-                // Handle text messages
-                $text = $request->input('text');
-
-                $message = Message::create([
-                    'content' => $text,
-                    'message_type' => 'text',
-                    'conversation_id' => $conversation->id,
-                    'user_id' => $user->id,
-                ]);
-            }
-
-            $lastMessage = $messages = Message::where('conversation_id', $conversation->id)->with('user')->latest()
-            ->first();
-            // Dispatch the message event
-            if ($lastMessage) {
-                event(new PrivateMessageEvent($lastMessage));
-            }
-
-            return response()->json(['message' => 'Message sent successfully.']);
 
         } catch (\Exception $e) {
             return $e;
@@ -105,21 +57,25 @@ class ChatController extends Controller
     public function getConversationId($recipientId) {
         try {
             $currentUser = Auth::user();
-            $conversation = Conversation::whereHas('participants', function ($query) use ($currentUser) {
-                $query->where('user_id', $currentUser->id);
-            })->whereHas('participants', function ($query) use ($recipientId) {
-                $query->where('user_id', $recipientId);
-            })->first();
+
+            // Retrieve a private conversation between the current user and the recipient
+            $conversation = Conversation::where('type', 'private')
+                ->whereHas('participants', function ($query) use ($currentUser) {
+                    $query->where('user_id', $currentUser->id);
+                })
+                ->whereHas('participants', function ($query) use ($recipientId) {
+                    $query->where('user_id', $recipientId);
+                })
+                ->first();
 
             if ($conversation) {
                 return response()->json(['conversationId' => $conversation->id]);
             } else {
-                // Handle the case when no conversation exists
-                return response()->json(['error' => 'No conversation found for the recipient']);
+                // Handle the case when no private conversation exists
+                return response()->json(['error' => 'No private conversation found for the recipient']);
             }
         } catch (\Exception $e) {
-
-            return response()->json(['error' => 'No conversation found for the recipient']);
+            return response()->json(['error' => 'Error while fetching conversation ID']);
         }
     }
 
@@ -138,5 +94,74 @@ class ChatController extends Controller
             return $e;
             // return response()->json(['error' => 'Error fetching messages'], 500);
         }
+    }
+
+    private function getOrCreatePrivateConversation($user, $recipientId) {
+        $conversation = Conversation::whereHas('participants', function ($query) use ($user, $recipientId) {
+            $query->where('user_id', $user->id);
+        })->whereHas('participants', function ($query) use ($recipientId) {
+            $query->where('user_id', $recipientId);
+        })
+        ->where('type', 'private')
+        ->first();
+
+        // If a conversation doesn't exist, create a new one
+        if (!$conversation) {
+            $conversation = new Conversation([
+                'type' => 'private',
+            ]);
+            $conversation->save();
+
+            // Attach participants (sender and recipient) to the conversation
+            $conversation->participants()->sync([$user->id, $recipientId]);
+        }
+
+        return $conversation;
+    }
+
+    private function getGroupConversation($conversationId) {
+        $conversation = Conversation::find($conversationId);
+
+        if (!$conversation || $conversation->type !== 'group') {
+            return response()->json(['error' => 'Invalid group conversation.'], 400);
+        }
+        return $conversation;
+    }
+
+    private function saveMessage($request, $conversation, $user) {
+        if ($request->messageType === 'image' && $request->has('imageData')) {
+            // Handle base64-encoded image data
+            $imageData = $request->input('imageData');
+            $imageData = base64_decode($imageData);
+
+            // Generate a unique filename for the image
+            $filename = Str::random(20) . '.jpg';
+
+            // Save the image to a storage path (you may configure your storage in Laravel)
+            $path = storage_path('app/public/chat-images/' . $filename);
+            File::put($path, $imageData);
+
+            $message = new Message([
+                'content' => $filename,
+                'conversation_id' => $conversation->id,
+                'user_id' => $user->id,
+                'message_type' => 'image',
+            ]);
+
+            $message->save();
+
+        } elseif ($request->messageType === 'text' && $request->has('text')) {
+            // Handle text messages
+            $text = $request->input('text');
+
+            $message = Message::create([
+                'content' => $text,
+                'message_type' => 'text',
+                'conversation_id' => $conversation->id,
+                'user_id' => $user->id,
+            ]);
+        }
+        $lastMessage = Message::where('conversation_id', $conversation->id)->with('user')->latest()->first();
+        return $lastMessage;
     }
 }

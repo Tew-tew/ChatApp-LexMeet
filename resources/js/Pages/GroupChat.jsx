@@ -8,7 +8,7 @@ import  GroupChatBox from '../Pages/GroupChat/GroupChatBox';
 const GroupChat = ({auth}) => {
   return (
     <>
-        <Head title="Chat Page" />
+        <Head title="Group Chat" />
         <div className="py-4">
                 <Container>
                     <Row >
